@@ -1,17 +1,12 @@
-﻿using AutoMapper;
-using LeaveManagementSystem.Web.Data;
-using LeaveManagementSystem.Web.Models.LeaveTypes;
+﻿using LeaveManagementSystem.Web.Models.LeaveTypes;
 using LeaveManagementSystem.Web.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace LeaveManagementSystem.Web.Controllers
 {
+    [Authorize(Roles = Roles.Administrator)]
     public class LeaveTypesController(ILeaveTypeService leaveTypeService) : Controller
     {
         private const string NameExistsValidationMessage = "Leave Type with this name already exists.";
@@ -57,7 +52,7 @@ namespace LeaveManagementSystem.Web.Controllers
             {
                 ModelState.AddModelError(nameof(leaveType.Name), NameExistsValidationMessage);
             }
-            
+
             if (ModelState.IsValid)
             {
                 var leaveTypeEntity = _leaveTypeService.CreateLeaveTypeAsync(leaveType);
@@ -95,14 +90,14 @@ namespace LeaveManagementSystem.Web.Controllers
                 return NotFound();
             }
 
-            if(await _leaveTypeService.CheckIfLeaveTypeNameExistsForEdit(leaveTypeEdit))
+            if (await _leaveTypeService.CheckIfLeaveTypeNameExistsForEdit(leaveTypeEdit))
             {
                 ModelState.AddModelError(nameof(leaveTypeEdit.Name), NameExistsValidationMessage);
             }
 
             if (ModelState.IsValid)
             {
-                
+
                 try
                 {
                     await _leaveTypeService.UpdateLeaveTypeAsync(leaveTypeEdit);
