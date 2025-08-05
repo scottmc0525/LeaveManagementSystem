@@ -4,6 +4,7 @@ using LeaveManagementSystem.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LeaveManagementSystem.Web.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250804203132_Refactor")]
+    partial class Refactor
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -148,7 +151,7 @@ namespace LeaveManagementSystem.Web.Data.Migrations
 
                     b.HasIndex("PeriodId");
 
-                    b.ToTable("LeaveAllocations", (string)null);
+                    b.ToTable("LeaveAllocations");
                 });
 
             modelBuilder.Entity("LeaveManagementSystem.Web.Data.LeaveType", b =>
@@ -169,7 +172,7 @@ namespace LeaveManagementSystem.Web.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("LeaveTypes", (string)null);
+                    b.ToTable("LeaveTypes");
                 });
 
             modelBuilder.Entity("LeaveManagementSystem.Web.Data.Period", b =>
@@ -192,7 +195,7 @@ namespace LeaveManagementSystem.Web.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Periods", (string)null);
+                    b.ToTable("Periods");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

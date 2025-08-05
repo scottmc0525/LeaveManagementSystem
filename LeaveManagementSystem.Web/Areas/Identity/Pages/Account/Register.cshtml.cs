@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
+using LeaveManagementSystem.Web.Services.LeaveAllocations;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -31,6 +32,7 @@ namespace LeaveManagementSystem.Web.Areas.Identity.Pages.Account
         private readonly IUserEmailStore<ApplicationUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
+        private readonly ILeaveAllocationService _leaveAllocationService;
 
         public RegisterModel(
             UserManager<ApplicationUser> userManager,
@@ -38,7 +40,8 @@ namespace LeaveManagementSystem.Web.Areas.Identity.Pages.Account
             SignInManager<ApplicationUser> signInManager,
             RoleManager<IdentityRole> roleManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            ILeaveAllocationService leaveAllocationService)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -47,6 +50,7 @@ namespace LeaveManagementSystem.Web.Areas.Identity.Pages.Account
             _roleManager = roleManager;
             _logger = logger;
             _emailSender = emailSender;
+            _leaveAllocationService = leaveAllocationService;
         }
 
         /// <summary>
@@ -161,6 +165,8 @@ namespace LeaveManagementSystem.Web.Areas.Identity.Pages.Account
                     }
                         
                     var userId = await _userManager.GetUserIdAsync(user);
+                    await _leaveAllocationService.AllocateLeave(userId);
+
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
                     var callbackUrl = Url.Page(
