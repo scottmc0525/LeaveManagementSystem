@@ -1,13 +1,17 @@
 ﻿using AutoMapper;
 using LeaveManagementSystem.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace LeaveManagementSystem.Application.Services.LeaveTypes
 {
-    public class LeaveTypesService(ApplicationDbContext context, IMapper mapper) : ILeaveTypesService
+    public class LeaveTypesService(ApplicationDbContext context, 
+        IMapper mapper,
+        ILogger<LeaveTypesService> logger) : ILeaveTypesService
     {
         private readonly ApplicationDbContext _context = context;
         private readonly IMapper _mapper = mapper;
+        private readonly ILogger<LeaveTypesService> _logger = logger;
         private const string NameExistsValidationMessage = "Leave Type with this name already exists.";
 
         public async Task<List<LeaveTypeReadOnlyVM>> GetAllLeaveTypesAsync()
@@ -27,6 +31,7 @@ namespace LeaveManagementSystem.Application.Services.LeaveTypes
 
         public async Task CreateLeaveTypeAsync(LeaveTypeCreateVM leaveType)
         {
+            _logger.LogInformation("Creating a new leave type with name: {Name} - {NumberOfDays}", leaveType.Name, leaveType.NumberOfDays);
             var leaveTypeEntity = _mapper.Map<LeaveType>(leaveType);
             _context.Add(leaveTypeEntity);
             await _context.SaveChangesAsync();

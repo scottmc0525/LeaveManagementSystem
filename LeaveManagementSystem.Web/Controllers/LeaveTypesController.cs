@@ -5,13 +5,15 @@ using Microsoft.EntityFrameworkCore;
 namespace LeaveManagementSystem.Web.Controllers
 {
     [Authorize(Roles = Roles.Administrator)]
-    public class LeaveTypesController(ILeaveTypesService _leaveTypeService) : Controller
+    public class LeaveTypesController(ILeaveTypesService _leaveTypeService.
+        ILogger<LeaveTypesController> _logger) : Controller
     {
         private const string NameExistsValidationMessage = "Leave Type with this name already exists.";
 
         // GET: LeaveTypes
         public async Task<IActionResult> Index()
         {
+            _logger.LogInformation("Accessed Leave Types Index page.");
             var viewData = await _leaveTypeService.GetAllLeaveTypesAsync();
             return View(viewData);
         }
@@ -56,6 +58,8 @@ namespace LeaveManagementSystem.Web.Controllers
                 var leaveTypeEntity = _leaveTypeService.CreateLeaveTypeAsync(leaveType);
                 return RedirectToAction(nameof(Index));
             }
+
+            _logger.LogWarning("Leave type attempt failed for Leave Type: {LeaveTypeName}", leaveType.Name);
             return View(leaveType);
         }
 
