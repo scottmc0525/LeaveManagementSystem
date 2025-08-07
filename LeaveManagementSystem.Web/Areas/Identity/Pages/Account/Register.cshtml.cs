@@ -32,7 +32,7 @@ namespace LeaveManagementSystem.Web.Areas.Identity.Pages.Account
         private readonly IUserEmailStore<ApplicationUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
-        private readonly ILeaveAllocationService _leaveAllocationService;
+        private readonly ILeaveAllocationsService _leaveAllocationService;
 
         public RegisterModel(
             UserManager<ApplicationUser> userManager,
@@ -41,7 +41,7 @@ namespace LeaveManagementSystem.Web.Areas.Identity.Pages.Account
             RoleManager<IdentityRole> roleManager,
             ILogger<RegisterModel> logger,
             IEmailSender emailSender,
-            ILeaveAllocationService leaveAllocationService)
+            ILeaveAllocationsService leaveAllocationService)
         {
             _userManager = userManager;
             _userStore = userStore;

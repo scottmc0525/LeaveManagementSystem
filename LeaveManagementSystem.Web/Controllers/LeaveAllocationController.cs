@@ -9,8 +9,8 @@ using System.Threading.Tasks;
 namespace LeaveManagementSystem.Web.Controllers
 {
     [Authorize]
-    public class LeaveAllocationController(ILeaveAllocationService _leaveAllocationService,
-        ILeaveTypeService _leaveTypeService) : Controller
+    public class LeaveAllocationController(ILeaveAllocationsService _leaveAllocationService,
+        ILeaveTypesService _leaveTypeService) : Controller
     {
         [Authorize(Roles = Roles.Administrator)]
         public async Task<IActionResult> Index()
