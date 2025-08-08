@@ -11,30 +11,33 @@ namespace LeaveManagementSystem.Web.Areas.Identity.Pages.Account
     {
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly ILeaveAllocationsService _leaveAllocationsService;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IUserStore<ApplicationUser> _userStore;
         private readonly IUserEmailStore<ApplicationUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
-        private readonly ILeaveAllocationsService _leaveAllocationService;
+        private readonly IWebHostEnvironment _hostEnvironment;
 
         public RegisterModel(
+            ILeaveAllocationsService leaveAllocationsService,
             UserManager<ApplicationUser> userManager,
             IUserStore<ApplicationUser> userStore,
             SignInManager<ApplicationUser> signInManager,
             RoleManager<IdentityRole> roleManager,
             ILogger<RegisterModel> logger,
             IEmailSender emailSender,
-            ILeaveAllocationsService leaveAllocationService)
+            IWebHostEnvironment hostEnvironment)
         {
+            this._leaveAllocationsService = leaveAllocationsService;
             _userManager = userManager;
             _userStore = userStore;
             _emailStore = GetEmailStore();
             _signInManager = signInManager;
-            _roleManager = roleManager;
+            this._roleManager = roleManager;
             _logger = logger;
             _emailSender = emailSender;
-            _leaveAllocationService = leaveAllocationService;
+            this._hostEnvironment = hostEnvironment;
         }
 
         /// <summary>
@@ -43,8 +46,6 @@ namespace LeaveManagementSystem.Web.Areas.Identity.Pages.Account
         /// </summary>
         [BindProperty]
         public InputModel Input { get; set; } = new InputModel();
-
-        public string[] RoleNames { get; set; }
 
         /// <summary>
         ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
@@ -93,12 +94,12 @@ namespace LeaveManagementSystem.Web.Areas.Identity.Pages.Account
             public string ConfirmPassword { get; set; }
 
             [Required]
-            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 2)]
+            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
             [Display(Name = "First Name")]
             public string FirstName { get; set; }
 
             [Required]
-            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 3)]
+            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
             [Display(Name = "Last Name")]
             public string LastName { get; set; }
 
@@ -107,17 +108,20 @@ namespace LeaveManagementSystem.Web.Areas.Identity.Pages.Account
             [Display(Name = "Date Of Birth")]
             public DateOnly DateOfBirth { get; set; }
 
-            [Required]
             public string RoleName { get; set; }
-
+            public string[] RoleNames { get; set; }
         }
+
 
         public async Task OnGetAsync(string returnUrl = null)
         {
             ReturnUrl = returnUrl;
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
-            var roles = await _roleManager.Roles.Select(x => x.Name).Where(x => x != "Administrator").ToArrayAsync();
-            RoleNames = roles;
+            var roles = await _roleManager.Roles
+                .Select(q => q.Name)
+                .Where(q => q != "Administrator")
+                .ToArrayAsync();
+            Input.RoleNames = roles;
         }
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
@@ -142,7 +146,7 @@ namespace LeaveManagementSystem.Web.Areas.Identity.Pages.Account
 
                     if (Input.RoleName == Roles.Supervisor)
                     {
-                        await _userManager.AddToRolesAsync(user, [Roles.Supervisor, Roles.Employee]);
+                        await _userManager.AddToRolesAsync(user, [Roles.Employee, Roles.Supervisor]);
                     }
                     else
                     {
@@ -150,7 +154,7 @@ namespace LeaveManagementSystem.Web.Areas.Identity.Pages.Account
                     }
 
                     var userId = await _userManager.GetUserIdAsync(user);
-                    await _leaveAllocationService.AllocateLeave(userId);
+                    await _leaveAllocationsService.AllocateLeave(userId);
 
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
@@ -160,8 +164,15 @@ namespace LeaveManagementSystem.Web.Areas.Identity.Pages.Account
                         values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
                         protocol: Request.Scheme);
 
-                    await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
+                    // grab the template
+                    var emailTemplatePath = Path.Combine(_hostEnvironment.WebRootPath, "templates", "email_layout.html");
+                    var template = await System.IO.File.ReadAllTextAsync(emailTemplatePath);
+                    var messageBody = template
+                        .Replace("{UserName}", $"{Input.FirstName} {Input.LastName}")
+                        .Replace("{MessageContent}",
                         $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+
+                    await _emailSender.SendEmailAsync(Input.Email, "Confirm your email", messageBody);
 
                     if (_userManager.Options.SignIn.RequireConfirmedAccount)
                     {
@@ -178,8 +189,7 @@ namespace LeaveManagementSystem.Web.Areas.Identity.Pages.Account
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
             }
-            var roles = await _roleManager.Roles.Select(x => x.Name).Where(x => x != "Administrator").ToArrayAsync();
-            RoleNames = roles;
+
             // If we got this far, something failed, redisplay form
             return Page();
         }

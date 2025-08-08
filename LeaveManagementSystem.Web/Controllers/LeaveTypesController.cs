@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 namespace LeaveManagementSystem.Web.Controllers
 {
     [Authorize(Roles = Roles.Administrator)]
-    public class LeaveTypesController(ILeaveTypesService _leaveTypeService.
+    public class LeaveTypesController(ILeaveTypesService _leaveTypeService,
         ILogger<LeaveTypesController> _logger) : Controller
     {
         private const string NameExistsValidationMessage = "Leave Type with this name already exists.";
